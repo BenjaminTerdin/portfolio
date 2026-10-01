@@ -1,0 +1,111 @@
+{
+  "page": {
+    "title": "AI-portfolio | Idéer blir användbara",
+    "description": "En interaktiv portfolio om AI-assisterad utveckling, praktisk problemlösning och idéer som blir verklighet.",
+    "tabletLabel": "Interaktiv portfolio-surfplatta",
+    "documentTitle": "Interaktiv AI-portfolio",
+    "launcherTitle": "Benter's värld.",
+    "appsLabel": "Portfolioappar"
+  },
+  "aria": {
+    "lockScreen": "Låsskärm",
+    "clock": "Lokal tid och datum i Stockholm",
+    "time": "Aktuell tid i Stockholm",
+    "lockTablet": "Lås surfplattan",
+    "back": "Tillbaka till portfolioappar",
+    "appView": "Portfolioapp",
+    "switchToLight": "Byt till ljust läge",
+    "switchToDark": "Byt till mörkt läge"
+  },
+  "pattern": {
+    "groupLabel": "Mönsterlås. Välj punkterna 1 till 9 i rätt ordning.",
+    "dotLabel": "Mönsterpunkt",
+    "unlocked": "Upplåst.",
+    "tryAgain": "Mönstret stämde inte. Försök igen.",
+    "nextDot": "Välj nästa punkt.",
+    "ready": "Mönstret är klart. Välj pilen för att fortsätta.",
+    "clear": "Rensa",
+    "enter": "Ange mönster"
+  },
+  "settings": {
+    "languageHeading": "Språk",
+    "languageDescription": "Välj språket som används i portfolion.",
+    "english": "Engelska",
+    "swedish": "Svenska",
+    "themeHeading": "Utseende",
+    "themeDescription": "Välj ljust eller mörkt läge.",
+    "darkMode": "Mörkt läge",
+    "lightMode": "Ljust läge"
+  },
+  "contact": {
+    "heading": "Kontaktlänkar",
+    "linkedinLabel": "LinkedIn",
+    "linkedinDescription": "Öppna min LinkedIn-profil.",
+    "emailLabel": "E-post",
+    "phoneLabel": "Telefon",
+    "profileImageAlt": "Porträtt av Benjamin Terdin"
+  },
+  "cv": {
+    "actionsLabel": "CV-dokumentets funktioner",
+    "preview": "Förhandsgranska CV",
+    "download": "Ladda ner PDF",
+    "previewTitle": "Förhandsvisning av CV",
+    "back": "Tillbaka till CV"
+  },
+  "apps": {
+    "projects": {
+      "name": "Projekt",
+      "category": "Utvalda arbeten",
+      "summary": "Idéer som blir verklighet.",
+      "description": "Ett växande urval av webbplatser och annat jag har varit med och skapat.",
+      "sections": [
+        {
+          "title": "Projektarkiv",
+          "body": "Utvalda webbplatser och projekt från senare arbete.",
+          "items": [
+            "vegbycamping.com",
+            "cityverkstan.se",
+            "bergudden.com",
+            "berguddenskatter.se",
+            "hypear.se",
+            "tech0.se"
+          ]
+        }
+      ]
+    },
+    "about": {
+      "name": "Om mig",
+      "category": "Personen bakom",
+      "summary": "Lite om mig. Kontakta mig för mer info.",
+      "description": "",
+      "paragraphs": [
+        "Jag är en blivande gymnasieingenjör inom informationsteknik och en riktig IT-nörd som gillar att grotta ner mig och lösa problem. Jag spenderar gärna vardagen framför datorn och .. ja, det är där jag sitter.",
+        "Mitt största fokus ligger på frontend och webbutveckling, framför allt React och Next.js. Jag har byggt flera webbplatser med fokus på UI/UX. Då handlar det om frontend, backend, databaser och deployment. Jag har arbetat med olika cloud lösningar, bland annat Vercel, Supabase och Firebase, samt Git och GitHub.",
+        "Utöver utveckling har jag ett stort intresse för AI, nätverk och infrastruktur. Jag har praktisk erfarenhet av virtualisering och containers med Proxmox och Docker, samt egna nätverksmiljöer. Jag gillar helt enkelt att grotta ner mig i teknik och förstå hur saker fungerar under ytan.",
+        "Kort sagt: webb, kod, datorer, nätverk eller AI – då snackar vi. :)"
+      ],
+      "sections": []
+    },
+    "resume": {
+      "name": "CV",
+      "category": "CV",
+      "summary": "",
+      "description": "",
+      "sections": []
+    },
+    "contact": {
+      "name": "Kontakt",
+      "category": "Ta kontakt",
+      "summary": "Hör av dig direkt.",
+      "description": "",
+      "sections": []
+    },
+    "settings": {
+      "name": "Inställningar",
+      "category": "Preferenser",
+      "summary": "Anpassa din upplevelse.",
+      "description": "",
+      "sections": []
+    }
+  }
+}

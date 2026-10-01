@@ -1,0 +1,111 @@
+{
+  "page": {
+    "title": "AI Portfolio | Ideas into Useful Things",
+    "description": "An interactive portfolio exploring AI-assisted development, practical problem solving, and ideas made tangible.",
+    "tabletLabel": "Interactive portfolio tablet",
+    "documentTitle": "Interactive AI portfolio",
+    "launcherTitle": "Benter's space.",
+    "appsLabel": "Portfolio apps"
+  },
+  "aria": {
+    "lockScreen": "Lock screen",
+    "clock": "Local date and time in Stockholm",
+    "time": "Current time in Stockholm",
+    "lockTablet": "Lock tablet",
+    "back": "Back to portfolio apps",
+    "appView": "Portfolio app",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "pattern": {
+    "groupLabel": "Pattern lock. Select dots 1 through 9 in order.",
+    "dotLabel": "Pattern dot",
+    "unlocked": "Unlocked.",
+    "tryAgain": "Pattern did not match. Try again.",
+    "nextDot": "Select the next dot.",
+    "ready": "Pattern ready. Select the arrow to enter.",
+    "clear": "Clear",
+    "enter": "Enter pattern"
+  },
+  "settings": {
+    "languageHeading": "Language",
+    "languageDescription": "Choose the language used throughout the portfolio.",
+    "english": "English",
+    "swedish": "Swedish",
+    "themeHeading": "Appearance",
+    "themeDescription": "Choose light or dark mode.",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
+  },
+  "contact": {
+    "heading": "Contact links",
+    "linkedinLabel": "LinkedIn",
+    "linkedinDescription": "Open my LinkedIn profile.",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "profileImageAlt": "Portrait of Benjamin Terdin"
+  },
+  "cv": {
+    "actionsLabel": "CV document actions",
+    "preview": "Preview CV",
+    "download": "Download PDF",
+    "previewTitle": "CV preview",
+    "back": "Back to CV"
+  },
+  "apps": {
+    "projects": {
+      "name": "Projects",
+      "category": "Selected work",
+      "summary": "Ideas made tangible.",
+      "description": "A growing archive of websites and other work I've helped create.",
+      "sections": [
+        {
+          "title": "Project archive",
+          "body": "Selected websites and case studies from recent work.",
+          "items": [
+            "vegbycamping.com",
+            "cityverkstan.se",
+            "bergudden.com",
+            "berguddenskatter.se",
+            "hypear.se",
+            "tech0.se"
+          ]
+        }
+      ]
+    },
+    "about": {
+      "name": "About me",
+      "category": "The person behind it",
+      "summary": "A little about me. Contact me for more info.",
+      "description": "",
+      "paragraphs": [
+        "I'm an aspiring upper-secondary engineer in information technology and a real IT enthusiast who enjoys digging into things and solving problems. I like spending my days at the computer and... well, that's where I am.",
+        "My main focus is frontend and web development, especially React and Next.js. I've built several websites with a focus on UI/UX, spanning frontend, backend, databases, and deployment. I've worked with different cloud solutions, including Vercel, Supabase, and Firebase, as well as Git and GitHub.",
+        "Beyond development, I'm very interested in AI, networks, and infrastructure. I have hands-on experience with virtualization and containers using Proxmox and Docker, as well as my own network environments. I simply enjoy exploring technology and understanding how things work under the hood.",
+        "In short: websites, code, computers, networks, or AI - that's what I'm talking about. :)"
+      ],
+      "sections": []
+    },
+    "resume": {
+      "name": "CV",
+      "category": "Curriculum vitae",
+      "summary": "",
+      "description": "",
+      "sections": []
+    },
+    "contact": {
+      "name": "Contact",
+      "category": "Start a conversation",
+      "summary": "Reach out directly.",
+      "description": "",
+      "sections": []
+    },
+    "settings": {
+      "name": "Settings",
+      "category": "Preferences",
+      "summary": "Make this portfolio yours.",
+      "description": "",
+      "sections": []
+    }
+  }
+}
