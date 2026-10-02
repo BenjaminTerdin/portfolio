@@ -29,6 +29,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type RefObject,
 } from "react";
 import {
   contactDetails,
@@ -112,21 +113,49 @@ function TabletStatusBar({
   time,
   onLock,
   lockLabel,
+  onClose,
+  closeLabel,
+  closeButtonRef,
+  showTime = true,
+  showLock = true,
+  showClose,
 }: {
   dateTime?: string;
   time: string;
   onLock: () => void;
   lockLabel: string;
+  onClose: () => void;
+  closeLabel: string;
+  closeButtonRef: RefObject<HTMLButtonElement | null>;
+  showTime?: boolean;
+  showLock?: boolean;
+  showClose: boolean;
 }) {
   return (
     <div className="tablet-status-bar">
-      <div className="tablet-status-time">
-        <time dateTime={dateTime}>{time}</time>
-      </div>
+      {showTime && (
+        <div className="tablet-status-time">
+          <time dateTime={dateTime}>{time}</time>
+        </div>
+      )}
       <div className="tablet-status-actions">
-        <button className="icon-button" type="button" onClick={onLock} aria-label={lockLabel}>
-          <LockKeyhole size={20} aria-hidden="true" />
-        </button>
+        {showLock && (
+          <button className="icon-button" type="button" onClick={onLock} aria-label={lockLabel}>
+            <LockKeyhole size={20} aria-hidden="true" />
+          </button>
+        )}
+        {showClose && (
+          <button
+            className="icon-button tablet-close-button"
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label={closeLabel}
+            title={closeLabel}
+          >
+            <X size={19} aria-hidden="true" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -312,6 +341,7 @@ export default function PortfolioExperience() {
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneFailed, setSceneFailed] = useState(false);
   const [isPhone, setIsPhone] = useState(false);
+  const [isMedium, setIsMedium] = useState(false);
   const [activeAppId, setActiveAppId] = useState<PortfolioAppId | null>(null);
   const [stockholmNow, setStockholmNow] = useState<Date | null>(null);
   const tabletCloseButtonRef = useRef<HTMLButtonElement>(null);
@@ -355,11 +385,19 @@ export default function PortfolioExperience() {
   }, []);
 
   useEffect(() => {
-    const viewport = window.matchMedia("(max-width: 760px)");
-    const updateDeviceType = () => setIsPhone(viewport.matches);
+    const phoneViewport = window.matchMedia("(max-width: 760px)");
+    const mediumViewport = window.matchMedia("(min-width: 761px) and (max-width: 1300px)");
+    const updateDeviceType = () => {
+      setIsPhone(phoneViewport.matches);
+      setIsMedium(mediumViewport.matches);
+    };
     updateDeviceType();
-    viewport.addEventListener("change", updateDeviceType);
-    return () => viewport.removeEventListener("change", updateDeviceType);
+    phoneViewport.addEventListener("change", updateDeviceType);
+    mediumViewport.addEventListener("change", updateDeviceType);
+    return () => {
+      phoneViewport.removeEventListener("change", updateDeviceType);
+      mediumViewport.removeEventListener("change", updateDeviceType);
+    };
   }, []);
 
   useEffect(() => () => {
@@ -570,6 +608,7 @@ export default function PortfolioExperience() {
                 {!sceneReady && <div className="scene-loading" role="status">{messages.scene.loading}</div>}
                 <AmbientScene
                   isPhone={isPhone}
+                  isMedium={isMedium}
                   raised={stage === "opening" || stage === "tablet" || stage === "turning-off" || stage === "closing"}
                   reducedMotion={Boolean(reduceMotion)}
                   sceneLabel={messages.scene.label}
@@ -655,6 +694,18 @@ export default function PortfolioExperience() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: reduceMotion ? 0 : 0.3 }}
             >
+              <TabletStatusBar
+                dateTime={dateTime}
+                time={stockholmTime}
+                onLock={lockDevice}
+                lockLabel={messages.aria.lockTablet}
+                onClose={turnOffDevice}
+                closeLabel={messages.scene.closeTablet}
+                closeButtonRef={tabletCloseButtonRef}
+                showTime={false}
+                showLock={false}
+                showClose={stage === "tablet"}
+              />
               <Image
                 className="tablet-logo"
                 src={lightMode ? "/BenterBlack500x500.svg" : "/BenterWhite500x500.svg"}
@@ -691,6 +742,10 @@ export default function PortfolioExperience() {
                 time={stockholmTime}
                 onLock={lockDevice}
                 lockLabel={messages.aria.lockTablet}
+                onClose={turnOffDevice}
+                closeLabel={messages.scene.closeTablet}
+                closeButtonRef={tabletCloseButtonRef}
+                showClose={stage === "tablet"}
               />
               <button
                 className="icon-button app-back-button"
@@ -840,6 +895,10 @@ export default function PortfolioExperience() {
                 time={stockholmTime}
                 onLock={lockDevice}
                 lockLabel={messages.aria.lockTablet}
+                onClose={turnOffDevice}
+                closeLabel={messages.scene.closeTablet}
+                closeButtonRef={tabletCloseButtonRef}
+                showClose={stage === "tablet"}
               />
               <div className="launcher-content">
                 <header className="launcher-intro">
@@ -879,18 +938,6 @@ export default function PortfolioExperience() {
         <div className="navigation-pill" aria-hidden="true" />
         </div>
               </motion.section>
-              {stage === "tablet" && (
-                <button
-                  className="tablet-exit-button"
-                  ref={tabletCloseButtonRef}
-                  type="button"
-                  onClick={turnOffDevice}
-                  aria-label={messages.scene.closeTablet}
-                  title={messages.scene.closeTablet}
-                >
-                  <X size={19} aria-hidden="true" />
-                </button>
-              )}
             </motion.div>
           )}
         </>

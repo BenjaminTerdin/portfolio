@@ -12,6 +12,7 @@ import {
   Group,
   LatheGeometry,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   PCFShadowMap,
   PerspectiveCamera,
@@ -21,6 +22,7 @@ import {
   Scene,
   SRGBColorSpace,
   SphereGeometry,
+  TextureLoader,
   TorusGeometry,
   Vector2,
   Vector3,
@@ -30,6 +32,7 @@ import { useEffect, useRef } from "react";
 
 type AmbientSceneProps = {
   isPhone: boolean;
+  isMedium: boolean;
   raised: boolean;
   reducedMotion: boolean;
   sceneLabel: string;
@@ -61,7 +64,7 @@ function addRod(
   return rod;
 }
 
-function addTableware(scene: Scene, compact: boolean) {
+function addTableware(scene: Scene, compact: boolean, medium: boolean) {
   const ceramic = makeMaterial("#f4eee2", 0.38);
   const saucerMaterial = makeMaterial("#dfd5c5", 0.48);
   const coffeeMaterial = makeMaterial("#493022", 0.28);
@@ -72,8 +75,8 @@ function addTableware(scene: Scene, compact: boolean) {
   const petalMaterial = makeMaterial("#fffaf0", 0.62);
   const centerMaterial = makeMaterial("#d7a84b", 0.48);
 
-  const cupX = compact ? 1.5 : 4.15;
-  const cupZ = compact ? -6.1 : -1.55;
+  const cupX = compact ? 1.5 : medium ? 3 : 4.15;
+  const cupZ = compact ? -6.1 : medium ? -2.7 : -1.55;
   const saucer = new Mesh(new CylinderGeometry(0.78, 0.78, 0.08, 48), saucerMaterial);
   saucer.position.set(cupX, 0.08, cupZ);
   saucer.receiveShadow = true;
@@ -103,7 +106,7 @@ function addTableware(scene: Scene, compact: boolean) {
   scene.add(handle);
 
   const plant = new Group();
-  plant.position.set(compact ? -1.5 : -4.1, 0, compact ? -6.1 : -1.65);
+  plant.position.set(compact ? -1.5 : medium ? -3 : -4.1, 0, compact ? -6.1 : medium ? -2.7 : -1.65);
   scene.add(plant);
 
   const pot = new Mesh(
@@ -162,6 +165,7 @@ function addTableware(scene: Scene, compact: boolean) {
 
 export default function AmbientScene({
   isPhone,
+  isMedium,
   raised,
   reducedMotion,
   sceneLabel,
@@ -208,6 +212,8 @@ export default function AmbientScene({
         emissive: new Color("#000000"),
         transparent: true,
         opacity: 0,
+        colorWrite: false,
+        depthWrite: false,
       });
 
       renderer = new WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -263,10 +269,10 @@ export default function AmbientScene({
       const deviceTilt = isPhone ? 0.12 : 0.16;
       const idlePosition = new Vector3(0, isPhone ? 0.12 : 0.7, 0.35);
       const idleRotation = new Vector3(deviceTilt, -0.06, 0);
-      const raisedPosition = new Vector3(0, isPhone ? 2.6 : 4.1, 4.1);
-      const raisedRotation = new Vector3(isPhone ? 0.08 : 0.04, 0, 0);
+      const raisedPosition = new Vector3(0, isPhone ? 4.1 : 4.4, 4.1);
+      const raisedRotation = new Vector3(isPhone ? 0.3 : 0.04, 0, 0);
       const idleScale = isPhone ? 0.64 : 0.54;
-      const raisedScale = isPhone ? 1.6 : 2.4;
+      const raisedScale = 2.4;
       const tablet = new Group();
       tablet.position.copy(idlePosition);
       tablet.rotation.set(idleRotation.x, idleRotation.y, idleRotation.z);
@@ -281,6 +287,23 @@ export default function AmbientScene({
       body.receiveShadow = true;
       tablet.add(body);
 
+      const logoTexture = new TextureLoader().load("/BenterWhite500x500.svg");
+      logoTexture.colorSpace = SRGBColorSpace;
+      const logoSize = deviceWidth * (isPhone ? 0.66 : 0.44);
+      const logoMaterial = new MeshBasicMaterial({
+        map: logoTexture,
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+      });
+      const logo = new Mesh(
+        new PlaneGeometry(logoSize, logoSize),
+        logoMaterial,
+      );
+      logo.rotation.x = -Math.PI / 2;
+      logo.position.set(0, deviceThickness / 2 + 0.008, 0);
+      tablet.add(logo);
+
       const screen = new Mesh(new PlaneGeometry(screenWidth, screenLength), screenMaterial);
       screen.rotation.set(0, 0, 0);
       screen.position.set(0, 0, 0);
@@ -294,7 +317,7 @@ export default function AmbientScene({
       cameraLens.position.set(0, deviceThickness / 2 + 0.01, -deviceLength / 2 + (isPhone ? 0.28 : 0.16));
       tablet.add(cameraLens);
 
-      const flowers = addTableware(scene, isPhone);
+      const flowers = addTableware(scene, isPhone, isMedium);
 
       type DeviceTransition = {
         fromPosition: Vector3;
@@ -307,17 +330,6 @@ export default function AmbientScene({
       let deviceRaised = false;
 
       const transitionDevice = (shouldRaise: boolean) => {
-        if (isPhone) {
-          tablet.position.set(0, 0.12, 0.35);
-          tablet.rotation.set(0.04, -0.1, -0.04);
-          tablet.scale.setScalar(0.64);
-          if (shouldRaise) callbacksRef.current.onRaised();
-          else callbacksRef.current.onLowered();
-          deviceRaised = shouldRaise;
-          deviceTransition = null;
-          return;
-        }
-
         if (deviceRaised === shouldRaise && !deviceTransition) return;
         deviceRaised = shouldRaise;
         deviceTransition = {
@@ -384,37 +396,32 @@ export default function AmbientScene({
         if (!reducedMotion) flowers.rotation.z = Math.sin(timestamp * 0.00055) * 0.012;
 
         if (deviceTransition) {
-          if (isPhone) {
-            tablet.position.set(0, 0.12, 0.35);
-            tablet.rotation.set(0.04, -0.1, -0.04);
-            tablet.scale.setScalar(0.64);
+          const transition = deviceTransition;
+          const baseDuration = transition.shouldRaise
+            ? isPhone ? 760 : 850
+            : isPhone ? 570 : 650;
+          const duration = reducedMotion ? 1 : baseDuration;
+          const progress = Math.min(1, (timestamp - transition.startTime) / duration);
+          const eased = transition.shouldRaise
+            ? 1 - Math.pow(1 - progress, 3)
+            : progress * progress * (3 - 2 * progress);
+          logoMaterial.opacity = transition.shouldRaise ? 1 - eased : eased;
+          const targetPosition = transition.shouldRaise ? raisedPosition.clone() : idlePosition.clone();
+          const targetRotation = transition.shouldRaise ? raisedRotation.clone() : idleRotation.clone();
+          const targetScale = transition.shouldRaise ? raisedScale : idleScale;
+
+          tablet.position.lerpVectors(transition.fromPosition, targetPosition, eased);
+          tablet.rotation.set(
+            transition.fromRotation.x + (targetRotation.x - transition.fromRotation.x) * eased,
+            transition.fromRotation.y + (targetRotation.y - transition.fromRotation.y) * eased,
+            transition.fromRotation.z + (targetRotation.z - transition.fromRotation.z) * eased,
+          );
+          tablet.scale.setScalar(transition.fromScale + (targetScale - transition.fromScale) * eased);
+
+          if (progress >= 1) {
             deviceTransition = null;
-            if (deviceRaised) callbacksRef.current.onRaised();
+            if (transition.shouldRaise) callbacksRef.current.onRaised();
             else callbacksRef.current.onLowered();
-          } else {
-            const transition = deviceTransition;
-            const duration = reducedMotion ? 1 : transition.shouldRaise ? 760 : 570;
-            const progress = Math.min(1, (timestamp - transition.startTime) / duration);
-            const eased = transition.shouldRaise
-              ? 1 - Math.pow(1 - progress, 3)
-              : progress * progress * (3 - 2 * progress);
-            const targetPosition = transition.shouldRaise ? raisedPosition.clone() : idlePosition.clone();
-            const targetRotation = transition.shouldRaise ? raisedRotation.clone() : idleRotation.clone();
-            const targetScale = transition.shouldRaise ? raisedScale : idleScale;
-
-            tablet.position.lerpVectors(transition.fromPosition, targetPosition, eased);
-            tablet.rotation.set(
-              transition.fromRotation.x + (targetRotation.x - transition.fromRotation.x) * eased,
-              transition.fromRotation.y + (targetRotation.y - transition.fromRotation.y) * eased,
-              transition.fromRotation.z + (targetRotation.z - transition.fromRotation.z) * eased,
-            );
-            tablet.scale.setScalar(transition.fromScale + (targetScale - transition.fromScale) * eased);
-
-            if (progress >= 1) {
-              deviceTransition = null;
-              if (transition.shouldRaise) callbacksRef.current.onRaised();
-              else callbacksRef.current.onLowered();
-            }
           }
         }
 
@@ -449,7 +456,7 @@ export default function AmbientScene({
       renderer?.dispose();
       if (!disposed) callbacksRef.current.onError();
     }
-  }, [isPhone, reducedMotion]);
+  }, [isMedium, isPhone, reducedMotion]);
 
   useEffect(() => {
     const canvas = mountRef.current?.querySelector("canvas");
