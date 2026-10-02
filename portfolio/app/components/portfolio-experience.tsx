@@ -16,8 +16,10 @@ import {
   Moon,
   Settings,
   Sun,
+  X,
   type LucideIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -25,6 +27,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import {
@@ -37,6 +40,24 @@ import {
   type LocaleMessages,
   type PortfolioAppId,
 } from "../portfolio-content";
+
+const AmbientScene = dynamic(() => import("./ambient-scene"), {
+  ssr: false,
+  loading: () => null,
+});
+
+type ExperienceStage = "boot" | "welcome" | "tabletop" | "opening" | "tablet" | "turning-off" | "closing";
+
+function readPreferenceCookie(name: string) {
+  const prefix = `${name}=`;
+  const cookie = document.cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith(prefix));
+  return cookie?.slice(prefix.length) ?? null;
+}
+
+function writePreferenceCookie(name: string, value: string) {
+  const secure = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=${value}; Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
+}
 
 const pattern = [1, 2, 3, 6, 9];
 const appIcons: Record<PortfolioAppId, LucideIcon> = {
@@ -283,28 +304,71 @@ function PatternLock({
 }
 
 export default function PortfolioExperience() {
+  const [stage, setStage] = useState<ExperienceStage>("boot");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [lightMode, setLightMode] = useState(false);
   const [isCvPreview, setIsCvPreview] = useState(false);
   const [locale, setLocale] = useState<Locale>("en");
+  const [sceneReady, setSceneReady] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
+  const [isPhone, setIsPhone] = useState(false);
   const [activeAppId, setActiveAppId] = useState<PortfolioAppId | null>(null);
   const [stockholmNow, setStockholmNow] = useState<Date | null>(null);
+  const tabletCloseButtonRef = useRef<HTMLButtonElement>(null);
+  const previousStageRef = useRef(stage);
+  const closeTransitionTimerRef = useRef<number | null>(null);
+  const lowerDeviceTimerRef = useRef<number | null>(null);
   const cvPreviewFrameRef = useRef<HTMLIFrameElement>(null);
   const reduceMotion = useReducedMotion();
   const messages = getMessages(locale);
   const activeApp = activeAppId ? { id: activeAppId, ...messages.apps[activeAppId] } : null;
 
   useEffect(() => {
-    const savedLocale = window.localStorage.getItem("portfolio-locale");
-    if (savedLocale === "en" || savedLocale === "sv") {
-      startTransition(() => setLocale(savedLocale));
+    const savedTheme = readPreferenceCookie("portfolio-theme");
+    let savedLocale = readPreferenceCookie("portfolio-locale");
+
+    if (savedLocale !== "en" && savedLocale !== "sv") {
+      try {
+        const legacyLocale = window.localStorage.getItem("portfolio-locale");
+        if (legacyLocale === "en" || legacyLocale === "sv") {
+          savedLocale = legacyLocale;
+          writePreferenceCookie("portfolio-locale", legacyLocale);
+        }
+      } catch {
+        savedLocale = null;
+      }
     }
+
+    const initialLocale: Locale = savedLocale === "sv" ? "sv" : "en";
+    document.documentElement.lang = initialLocale;
+    startTransition(() => {
+      setLocale(initialLocale);
+      setLightMode(savedTheme === "light");
+      setStage("welcome");
+    });
 
     const updateClock = () => setStockholmNow(new Date());
     updateClock();
 
     const intervalId = window.setInterval(updateClock, 10_000);
     return () => window.clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const viewport = window.matchMedia("(max-width: 760px)");
+    const updateDeviceType = () => setIsPhone(viewport.matches);
+    updateDeviceType();
+    viewport.addEventListener("change", updateDeviceType);
+    return () => viewport.removeEventListener("change", updateDeviceType);
+  }, []);
+
+  useEffect(() => () => {
+    if (closeTransitionTimerRef.current !== null) {
+      window.clearTimeout(closeTransitionTimerRef.current);
+    }
+    if (lowerDeviceTimerRef.current !== null) {
+      window.clearTimeout(lowerDeviceTimerRef.current);
+    }
   }, []);
 
   useEffect(() => {
@@ -322,6 +386,14 @@ export default function PortfolioExperience() {
     if (isCvPreview) applyCvPreviewTheme(cvPreviewFrameRef.current, lightMode);
   }, [isCvPreview, lightMode]);
 
+  useEffect(() => {
+    if (stage === "tablet") tabletCloseButtonRef.current?.focus({ preventScroll: true });
+    if ((previousStageRef.current === "tablet" || previousStageRef.current === "closing") && stage === "tabletop") {
+      document.querySelector<HTMLCanvasElement>(".ambient-scene-canvas")?.focus({ preventScroll: true });
+    }
+    previousStageRef.current = stage;
+  }, [stage]);
+
   const dateTime = stockholmNow?.toISOString();
   const stockholmTime = stockholmNow
     ? new Intl.DateTimeFormat("en-GB", {
@@ -334,8 +406,14 @@ export default function PortfolioExperience() {
   const stockholmDate = stockholmNow ? formatStockholmDate(stockholmNow, locale) : "";
 
   function updateLocale(nextLocale: Locale) {
-    window.localStorage.setItem("portfolio-locale", nextLocale);
+    writePreferenceCookie("portfolio-locale", nextLocale);
+    document.documentElement.lang = nextLocale;
     setLocale(nextLocale);
+  }
+
+  function updateTheme(nextLightMode: boolean) {
+    writePreferenceCookie("portfolio-theme", nextLightMode ? "light" : "dark");
+    setLightMode(nextLightMode);
   }
 
   function lockDevice() {
@@ -344,19 +422,228 @@ export default function PortfolioExperience() {
     setIsUnlocked(false);
   }
 
+  function turnOffDevice() {
+    if (stage !== "tablet" || closeTransitionTimerRef.current !== null || lowerDeviceTimerRef.current !== null) return;
+    setIsCvPreview(false);
+    setActiveAppId(null);
+    setIsUnlocked(false);
+
+    const powerOffDelay = reduceMotion ? 0 : 240;
+    const lowerDelay = reduceMotion ? 0 : 220;
+
+    setStage("turning-off");
+    closeTransitionTimerRef.current = window.setTimeout(() => {
+      closeTransitionTimerRef.current = null;
+
+      if (sceneFailed) {
+        setStage("tabletop");
+        return;
+      }
+
+      setStage("closing");
+      lowerDeviceTimerRef.current = window.setTimeout(() => {
+        lowerDeviceTimerRef.current = null;
+        setStage("tabletop");
+      }, lowerDelay);
+    }, powerOffDelay);
+  }
+
   return (
     <>
       <h1 className="visually-hidden">{messages.page.documentTitle}</h1>
-      <motion.section
-        className="tablet-frame"
-        aria-label={messages.page.tabletLabel}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: reduceMotion ? 0 : 0.45 }}
-      >
+      {stage === "boot" ? (
+        <motion.section
+          key="boot"
+          className="boot-screen"
+          data-theme={lightMode ? "light" : "dark"}
+          aria-label={messages.boot.status}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <Image
+            className="boot-logo"
+            src={lightMode ? "/BenterBlack500x500.svg" : "/BenterWhite500x500.svg"}
+            alt="Benter"
+            width={72}
+            height={72}
+          />
+          <p role="status">{messages.boot.status}</p>
+          <span className="boot-progress" aria-hidden="true"><span /></span>
+        </motion.section>
+      ) : stage === "welcome" ? (
+        <motion.section
+          key="welcome"
+          className="welcome-screen"
+          data-theme={lightMode ? "light" : "dark"}
+          aria-labelledby="welcome-heading"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.4 }}
+        >
+          <Image
+            className="welcome-logo"
+            src={lightMode ? "/BenterBlack500x500.svg" : "/BenterWhite500x500.svg"}
+            alt="Benter"
+            width={62}
+            height={62}
+            loading="eager"
+          />
+          <p className="welcome-eyebrow">{messages.welcome.eyebrow}</p>
+          <h2 id="welcome-heading">{messages.welcome.heading}</h2>
+          <p className="welcome-description">{messages.welcome.description}</p>
+
+          <div className="welcome-preferences">
+            <div className="welcome-preference">
+              <span>{messages.welcome.themeLabel}</span>
+              <div className="welcome-segment" role="group" aria-label={messages.welcome.themeLabel}>
+                <button
+                  className="welcome-option welcome-icon-option"
+                  type="button"
+                  aria-label={messages.aria.switchToDark}
+                  aria-pressed={!lightMode}
+                  title={messages.settings.darkMode}
+                  onClick={() => updateTheme(false)}
+                >
+                  <Moon size={17} aria-hidden="true" />
+                </button>
+                <button
+                  className="welcome-option welcome-icon-option"
+                  type="button"
+                  aria-label={messages.aria.switchToLight}
+                  aria-pressed={lightMode}
+                  title={messages.settings.lightMode}
+                  onClick={() => updateTheme(true)}
+                >
+                  <Sun size={17} aria-hidden="true" />
+                </button>
+              </div>
+            </div>
+            <div className="welcome-preference">
+              <span>{messages.welcome.languageLabel}</span>
+              <div className="welcome-segment" role="group" aria-label={messages.welcome.languageLabel}>
+                <button
+                  className="welcome-option"
+                  type="button"
+                  aria-pressed={locale === "en"}
+                  onClick={() => updateLocale("en")}
+                >
+                  {messages.settings.english}
+                </button>
+                <button
+                  className="welcome-option"
+                  type="button"
+                  aria-pressed={locale === "sv"}
+                  onClick={() => updateLocale("sv")}
+                >
+                  {messages.settings.swedish}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button className="welcome-enter-button" type="button" onClick={() => setStage("tabletop")}>
+            <span>{messages.welcome.enter}</span>
+            <ArrowRight size={19} aria-hidden="true" />
+          </button>
+        </motion.section>
+      ) : (
+        <>
+          <div
+            className={`scene-region${stage === "tablet" || stage === "turning-off" || stage === "closing" ? " is-covered" : ""}`}
+            aria-hidden={stage === "tablet" || stage === "turning-off" || stage === "closing"}
+          >
+            {sceneFailed ? (
+              <button
+                className="tabletop-fallback"
+                type="button"
+                aria-label={messages.scene.openTablet}
+                onClick={() => setStage("tablet")}
+              >
+                <span className="fallback-flowerpot" aria-hidden="true" />
+                <span className="fallback-tablet" aria-hidden="true" />
+                <span className="fallback-cup" aria-hidden="true" />
+                <span className="fallback-open-label">{messages.scene.openTablet}</span>
+              </button>
+            ) : (
+              <>
+                {!sceneReady && <div className="scene-loading" role="status">{messages.scene.loading}</div>}
+                <AmbientScene
+                  isPhone={isPhone}
+                  raised={stage === "opening" || stage === "tablet" || stage === "turning-off" || stage === "closing"}
+                  reducedMotion={Boolean(reduceMotion)}
+                  sceneLabel={messages.scene.label}
+                  openLabel={messages.scene.openTablet}
+                  onOpen={() => setStage("opening")}
+                  onRaised={() => setStage("tablet")}
+                  onLowered={() => setStage("tabletop")}
+                  onReady={() => setSceneReady(true)}
+                  onError={() => setSceneFailed(true)}
+                />
+              </>
+            )}
+          </div>
+          {(stage === "tablet" || stage === "turning-off" || stage === "closing") && (
+            <motion.div
+              key="tablet-open"
+              className={`tablet-open-layer${stage === "closing" ? " is-closing" : ""}`}
+              role="dialog"
+              aria-modal={stage !== "closing"}
+              aria-hidden={stage === "closing"}
+              aria-label={messages.page.tabletLabel}
+              onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  turnOffDevice();
+                  return;
+                }
+                if (event.key !== "Tab") return;
+
+                const controls = Array.from(
+                  event.currentTarget.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), a[href], iframe, [tabindex]:not([tabindex="-1"])',
+                  ),
+                );
+                const firstControl = controls[0];
+                const lastControl = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === firstControl) {
+                  event.preventDefault();
+                  lastControl?.focus();
+                } else if (!event.shiftKey && document.activeElement === lastControl) {
+                  event.preventDefault();
+                  firstControl?.focus();
+                }
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2, ease: "easeOut" }}
+            >
+              <button
+                className="tablet-stage-backdrop"
+                type="button"
+                aria-hidden="true"
+                tabIndex={-1}
+                onClick={turnOffDevice}
+              />
+              <motion.section
+                className="tablet-frame"
+                aria-label={messages.page.tabletLabel}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: reduceMotion ? 0 : 0.18 }}
+              >
       <span className="tablet-camera" aria-hidden="true" />
       <div className="tablet-screen" data-theme={lightMode ? "light" : "dark"}>
         <div className="screen-light" aria-hidden="true" />
+        {stage !== "tablet" && (
+          <motion.div
+            className="tablet-power-off"
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+          />
+        )}
         <AnimatePresence mode="wait" initial={false}>
           {!isUnlocked ? (
             <motion.section
@@ -458,7 +745,7 @@ export default function PortfolioExperience() {
                     lightMode={lightMode}
                     messages={messages}
                     onLocaleChange={updateLocale}
-                    onThemeChange={() => setLightMode((current) => !current)}
+                    onThemeChange={() => updateTheme(!lightMode)}
                   />
                 ) : activeAppId === "contact" ? (
                   <ContactContent messages={messages} />
@@ -591,7 +878,23 @@ export default function PortfolioExperience() {
         </AnimatePresence>
         <div className="navigation-pill" aria-hidden="true" />
         </div>
-      </motion.section>
+              </motion.section>
+              {stage === "tablet" && (
+                <button
+                  className="tablet-exit-button"
+                  ref={tabletCloseButtonRef}
+                  type="button"
+                  onClick={turnOffDevice}
+                  aria-label={messages.scene.closeTablet}
+                  title={messages.scene.closeTablet}
+                >
+                  <X size={19} aria-hidden="true" />
+                </button>
+              )}
+            </motion.div>
+          )}
+        </>
+      )}
     </>
   );
 }

@@ -26,6 +26,23 @@ export type LocaleMessages = {
     launcherTitle: string;
     appsLabel: string;
   };
+  boot: {
+    status: string;
+  };
+  welcome: {
+    eyebrow: string;
+    heading: string;
+    description: string;
+    themeLabel: string;
+    languageLabel: string;
+    enter: string;
+  };
+  scene: {
+    label: string;
+    openTablet: string;
+    closeTablet: string;
+    loading: string;
+  };
   aria: {
     lockScreen: string;
     clock: string;

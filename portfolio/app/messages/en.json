@@ -7,6 +7,23 @@
     "launcherTitle": "Benter's space.",
     "appsLabel": "Portfolio apps"
   },
+  "boot": {
+    "status": "Preparing your space"
+  },
+  "welcome": {
+    "eyebrow": "BENTER'S SPACE",
+    "heading": "A little space to explore.",
+    "description": "Welcome. Settle in, then wake the tablet to take a look around.",
+    "themeLabel": "Appearance",
+    "languageLabel": "Language",
+    "enter": "Enter the space"
+  },
+  "scene": {
+    "label": "A light tabletop with a tablet, coffee, and flowers",
+    "openTablet": "Open the portfolio tablet",
+    "closeTablet": "Return to the tabletop",
+    "loading": "Setting the table"
+  },
   "aria": {
     "lockScreen": "Lock screen",
     "clock": "Local date and time in Stockholm",

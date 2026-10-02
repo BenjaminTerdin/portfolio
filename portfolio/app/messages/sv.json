@@ -7,6 +7,23 @@
     "launcherTitle": "Benter's värld.",
     "appsLabel": "Portfolioappar"
   },
+  "boot": {
+    "status": "Förbereder din plats"
+  },
+  "welcome": {
+    "eyebrow": "BENTER'S SPACE",
+    "heading": "En liten plats att utforska.",
+    "description": "Välkommen. Gör dig hemmastadd och väck sedan surfplattan för att titta runt.",
+    "themeLabel": "Utseende",
+    "languageLabel": "Språk",
+    "enter": "Gå in"
+  },
+  "scene": {
+    "label": "Ett ljust bord med en surfplatta, kaffe och blommor",
+    "openTablet": "Öppna portfoliosurfplattan",
+    "closeTablet": "Tillbaka till bordet",
+    "loading": "Dukar fram"
+  },
   "aria": {
     "lockScreen": "Låsskärm",
     "clock": "Lokal tid och datum i Stockholm",
