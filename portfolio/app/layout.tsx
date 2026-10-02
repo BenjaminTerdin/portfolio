@@ -19,7 +19,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "AI Portfolio | Ideas into Useful Things",
+  title: "Benter's Space",
   description:
     "An interactive portfolio exploring AI-assisted development, practical problem solving, and ideas made tangible.",
   icons: {

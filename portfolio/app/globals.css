@@ -313,12 +313,12 @@ button:focus-visible {
   color: var(--accent);
 }
 
-.submit-pattern:disabled {
+.submit-pattern.is-disabled {
   color: #687068;
   cursor: not-allowed;
 }
 
-.submit-pattern:disabled:hover {
+.submit-pattern.is-disabled:hover {
   border-color: transparent;
   background: transparent;
   color: #687068;

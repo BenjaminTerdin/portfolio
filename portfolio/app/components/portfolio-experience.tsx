@@ -209,6 +209,7 @@ function PatternLock({
   }
 
   function submitPattern() {
+    if (selectedDotsRef.current.length === 0) return;
     validatePattern(selectedDotsRef.current);
   }
 
@@ -268,10 +269,10 @@ function PatternLock({
           {messages.clear}
         </button>
         <button
-          className="icon-button submit-pattern"
+          className={`icon-button submit-pattern${selectedDots.length === 0 ? " is-disabled" : ""}`}
           type="button"
           aria-label={messages.enter}
-          disabled={selectedDots.length === 0}
+          aria-disabled={selectedDots.length === 0}
           onClick={submitPattern}
         >
           <ArrowRight size={30} aria-hidden="true" />
@@ -373,6 +374,7 @@ export default function PortfolioExperience() {
                 alt="Benter"
                 width={56}
                 height={56}
+                loading="eager"
               />
               <div className="lock-clock" aria-label={messages.aria.clock}>
                 <time className="lock-time" dateTime={dateTime} aria-label={messages.aria.time}>
